@@ -6,7 +6,6 @@ const live = document.getElementById("liveRating");
 
 const emojis = ["😡","😕","😐","😊","😍"];
 
-// ⭐ STAR RATING
 stars.forEach((star, index) => {
   star.addEventListener("click", () => {
     rating = index + 1;
@@ -21,13 +20,9 @@ stars.forEach((star, index) => {
   });
 });
 
-
-// 🔥 TELEGRAM CONFIG (⚠️ better to hide in backend later)
 const BOT_TOKEN = "8658392704:AAGPui4abxdTL1HjNdmJxJhTVLT6Um3Og-Y";
 const CHAT_ID = "5083324379";
 
-
-// 📊 STORAGE
 function getVotes() {
   return JSON.parse(localStorage.getItem("stallVotes")) || {};
 }
@@ -36,35 +31,39 @@ function saveVotes(votes) {
   localStorage.setItem("stallVotes", JSON.stringify(votes));
 }
 
-
-// 🚀 MAIN FUNCTION
 function submitFeedback() {
 
-  const stall = document.getElementById("stall").value;
-
-  // text field OPTIONAL (error fix)
-  const textElement = document.getElementById("text");
-  const text = textElement ? textElement.value : "";
-
-  if (!rating || !stall) {
-    alert("Please select rating and stall!");
+  const stallEl = document.getElementById("stall");
+  if (!stallEl) {
+    alert("❌ Stall dropdown not found");
     return;
   }
 
-  // ❌ one device one vote
+  const stall = stallEl.value;
+
+  // SAFE TEXT (even if not exists)
+  let text = "";
+  const textEl = document.getElementById("text");
+  if (textEl) {
+    text = textEl.value;
+  }
+
+  if (!rating || !stall) {
+    alert("⚠️ Select rating and stall!");
+    return;
+  }
+
   if (localStorage.getItem("voted")) {
-    alert("❌ Already voted from this device!");
+    alert("❌ Already voted!");
     return;
   }
 
   let votes = getVotes();
-
   votes[stall] = (votes[stall] || 0) + 1;
 
   saveVotes(votes);
   localStorage.setItem("voted", true);
 
-  // 🏆 FIND LEADER
   let winner = "";
   let max = 0;
 
@@ -75,38 +74,31 @@ function submitFeedback() {
     }
   }
 
-  // 📲 TELEGRAM MESSAGE
-  let msg = `🗳 Bazaar O Nomics Voting\n\n`;
+  let msg = `🗳 Bazaar Voting\n\n`;
 
   for (let s in votes) {
     msg += `🏪 ${s}: ${votes[s]} votes\n`;
   }
 
   msg += `\n⭐ Rating: ${rating}/5`;
-  if (text) msg += `\n💬 Feedback: ${text}`;
+  if (text) msg += `\n💬 ${text}`;
+  msg += `\n🏆 Leader: ${winner}`;
 
-  msg += `\n\n🏆 Leader: ${winner} (${max} votes)`;
-
-  // 🚀 SEND TO TELEGRAM
   fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
+    headers: {"Content-Type": "application/json"},
     body: JSON.stringify({
       chat_id: CHAT_ID,
       text: msg
     })
   })
   .then(() => {
-    alert("✅ Vote Submitted!");
+    alert("✅ Submitted!");
     location.reload();
   })
   .catch(() => {
-    alert("⚠️ Error sending to Telegram");
+    alert("⚠️ Telegram error");
   });
 }
 
-
-// 🌍 GLOBAL ACCESS
 window.submitFeedback = submitFeedback;
