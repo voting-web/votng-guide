@@ -6,6 +6,7 @@ const live = document.getElementById("liveRating");
 
 const emojis = ["😡","😕","😐","😊","😍"];
 
+// ⭐ STAR RATING
 stars.forEach((star, index) => {
   star.addEventListener("click", () => {
     rating = index + 1;
@@ -20,9 +21,11 @@ stars.forEach((star, index) => {
   });
 });
 
-// 🔥 TELEGRAM CONFIG
+
+// 🔥 TELEGRAM CONFIG (⚠️ better to hide in backend later)
 const BOT_TOKEN = "8658392704:AAGPui4abxdTL1HjNdmJxJhTVLT6Um3Og-Y";
 const CHAT_ID = "5083324379";
+
 
 // 📊 STORAGE
 function getVotes() {
@@ -33,13 +36,18 @@ function saveVotes(votes) {
   localStorage.setItem("stallVotes", JSON.stringify(votes));
 }
 
-// 🚀 MAIN
+
+// 🚀 MAIN FUNCTION
 function submitFeedback() {
-  const text = document.getElementById("text").value;
+
   const stall = document.getElementById("stall").value;
 
-  if (!rating || !text || !stall) {
-    alert("Fill all fields!");
+  // text field OPTIONAL (error fix)
+  const textElement = document.getElementById("text");
+  const text = textElement ? textElement.value : "";
+
+  if (!rating || !stall) {
+    alert("Please select rating and stall!");
     return;
   }
 
@@ -55,8 +63,6 @@ function submitFeedback() {
 
   saveVotes(votes);
   localStorage.setItem("voted", true);
-
-  alert("✅ Vote Submitted!");
 
   // 🏆 FIND LEADER
   let winner = "";
@@ -76,16 +82,31 @@ function submitFeedback() {
     msg += `🏪 ${s}: ${votes[s]} votes\n`;
   }
 
-  msg += `\n🏆 Leader: ${winner} (${max} votes)`;
+  msg += `\n⭐ Rating: ${rating}/5`;
+  if (text) msg += `\n💬 Feedback: ${text}`;
 
+  msg += `\n\n🏆 Leader: ${winner} (${max} votes)`;
+
+  // 🚀 SEND TO TELEGRAM
   fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
     method: "POST",
-    headers: {"Content-Type": "application/json"},
+    headers: {
+      "Content-Type": "application/json"
+    },
     body: JSON.stringify({
       chat_id: CHAT_ID,
       text: msg
     })
+  })
+  .then(() => {
+    alert("✅ Vote Submitted!");
+    location.reload();
+  })
+  .catch(() => {
+    alert("⚠️ Error sending to Telegram");
   });
 }
 
+
+// 🌍 GLOBAL ACCESS
 window.submitFeedback = submitFeedback;
